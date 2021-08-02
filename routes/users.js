@@ -1,16 +1,20 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const _ = require("lodash");
+const nodemailer = require("nodemailer");
 const debug = require("debug")("app:routes:users");
 const genAuthToken = require("../utils/genAuthToken");
 const pool = require("../db");
 const validateUser = require("../middleware/validateUser");
+const confirmEmail = require("../middleware/confirmEmail");
 
 const router = express.Router();
 
 // * registration
-router.post("/", validateUser, async (req, res) => {
+router.post("/", [validateUser, confirmEmail], async (req, res) => {
   try {
+    const emailData = req.emailData;
+
     // * 1. destruct the req.body
     const { username, email, password } = req.body;
 
@@ -21,6 +25,9 @@ router.post("/", validateUser, async (req, res) => {
     );
     if (user.rows.length !== 0)
       return res.status(400).send("User already registered.");
+
+    if (emailData.email !== email)
+      return res.status(401).send("Email not verified.");
 
     // * 3. bcrypt the password
     const saltRounds = 10;
