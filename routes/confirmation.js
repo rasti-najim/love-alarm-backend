@@ -24,9 +24,11 @@ router.get("/:token", async (req, res) => {
 
 router.post("/code", (req, res) => {
   const { code } = req.body;
+  console.log(code);
 
   // * check if the user has verified their email
   const confirmToken = req.header("x-confirm-token");
+  console.log(confirmToken);
   if (!confirmToken)
     return res.status(401).send("Access denied. No token provided.");
 

@@ -7,8 +7,20 @@ const jwt = require("jsonwebtoken");
 const genAuthToken = require("../utils/genAuthToken");
 const pool = require("../db");
 const validateUser = require("../middleware/validateUser");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
+
+router.get("/me", auth, async (req, res) => {
+  try {
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [
+      req.user.id,
+    ]);
+    res.send(_.omit(user.rows[0], ["password"]));
+  } catch (error) {
+    res.sendStatus(500);
+  }
+});
 
 // * registration
 router.post("/", [validateUser], async (req, res) => {
@@ -16,7 +28,7 @@ router.post("/", [validateUser], async (req, res) => {
     // const emailData = req.emailData;
 
     // * 1. destruct the req.body
-    const { username, email, code, password } = req.body;
+    const { email, code, password, username, birth_date } = req.body;
 
     // * 2. check if the user exists (if so, throw error)
     const user = await pool.query(
@@ -47,8 +59,8 @@ router.post("/", [validateUser], async (req, res) => {
 
     // * 4. enter the new user inside the database
     const newUser = await pool.query(
-      "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *",
-      [username, email, hashedPassword]
+      "INSERT INTO users (username, email, password, birth_date) VALUES ($1, $2, $3, $4) RETURNING *",
+      [username, email, hashedPassword, birth_date]
     );
 
     // * 5. generate the jwt token and return it
