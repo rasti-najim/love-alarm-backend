@@ -2,7 +2,9 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const _ = require("lodash");
 const nodemailer = require("nodemailer");
+const axios = require("axios");
 const debug = require("debug")("app:routes:friends");
+const url = require("url");
 const jwt = require("jsonwebtoken");
 const genAuthToken = require("../utils/genAuthToken");
 const pool = require("../db");
@@ -68,6 +70,12 @@ router.post("/addFriend/:id", auth, async (req, res) => {
       await pool.query(
         "INSERT INTO friends (user_id, friend_id, created_at) VALUES ($1, $2, $3) RETURNING *",
         [id, req.user.id, new Date()]
+      );
+      const url = `${req.protocol}://${req.get("host")}`;
+      const response = await axios.post(
+        `${url}/api/chats/createChat/${id}`,
+        {},
+        { headers: { "x-auth-token": req.header("x-auth-token") } }
       );
       return res.send(addResult.rows[0]);
     }
