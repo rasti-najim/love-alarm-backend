@@ -4,6 +4,33 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
+router.get("/sharedWithYou/:chatId", auth, async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM shared_with_you WHERE chat_id = $1",
+      [chatId]
+    );
+    res.send(result.rows);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.post("/saveMessage/:chatId", auth, async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { sent_by_id, message } = req.body;
+    const result = await pool.query(
+      "INSERT INTO shared_with_you (chat_id, sent_by_id, message, link, photo) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [chatId, sent_by_id, message, null, null]
+    );
+    res.send(result.rows[0]);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 router.get("/:id", auth, async (req, res) => {
   try {
     const { id } = req.params;

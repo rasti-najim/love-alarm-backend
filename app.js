@@ -30,14 +30,15 @@ io.on("connection", (socket) => {
     socket.join(room);
   });
 
+  socket.on("chatStatus", (status, room) => {
+    socket.to(room).emit("chatStatus", status);
+    console.log(status);
+  });
+
   socket.on("message", (data, room) => {
     console.log(`Client has sent us: ${data}`);
 
-    if (room === "") {
-      socket.broadcast.emit("message", data);
-    } else {
-      socket.to(room).emit("message", data);
-    }
+    socket.to(room).emit("message", data);
   });
 
   socket.on("disconnect", () => {
